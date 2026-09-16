@@ -19,7 +19,13 @@ to docs, or any other relevant information.
 
 ## [Unreleased]
 
-_None_
+### Added
+
+- **Experimental**: New External Storage concurrency controls.
+
+  - `ExternalStorage` takes a new `concurrency` option that holds two new concurrency limiting config values: `maxDriverOperations` caps how many are in flight across every driver registered on that `ExternalStorage` instance and `maxOperationsPerMessage` caps how many a single "message" may have in flight, where a message is any top-level input or ouput (e.g. a Workflow Task activation, a client request, a Nexus operation, etc)
+  - Both limits are cooperative and drivers must use the new `context.limiter` to take out a permit for each request.
+  - The bundled S3 and GCS drivers were updated to use the limiter.
 
 ## [1.24.0] - 2026-09-14
 
@@ -108,13 +114,6 @@ _None_
     alias of `Foo.$Properties` preserving backward compatibility with type definitions that rely
     on the legacy spelling. Note that we may choose to deprecate the legacy spelling at some point
     in the future to encourage adoption of protobufjs' roadmap.
-
-- New External Storage concurrency controls
-  - Now, all payloads sites in a message are walked concurrently but sending an external storage operation to a driver is capped by `maxOperationsPerMessage` on a per-message basis and the actual operations drivers perform is capped "globally" (per instance of ExternalStorage) by `maxDriverOperations`.
-  - In order have a granular `maxDriverOperations` control we need drivers to cooperate so a new `context.limiter` is passed into drivers which they can use to take a permit for performing work.
-  - The existing S3 and GCS drivers were updated to use the new limiter.
-  - If a driver doesn't use the limiter during an operation a warning is logged.
-  - Reasonable defaults were added (8 per message, 64 global).
 
 ### Added
 
